@@ -10,29 +10,35 @@ import Cardano.Api (
   LocalNodeConnectInfo (LocalNodeConnectInfo),
   QueryInEra (QueryInShelleyBasedEra),
   QueryInMode (QueryInEra),
-  QueryInShelleyBasedEra (QueryEpoch, QueryProtocolParameters),
+  -- QueryInShelleyBasedEra (QueryEpoch, QueryProtocolParameters),
+  QueryInShelleyBasedEra (QueryProtocolParameters),
   ShelleyBasedEra (ShelleyBasedEraConway),
   queryNodeLocalState,
  )
 
 import Cardano.Api.Shelley (
-  NetworkId (Mainnet, Testnet),
+  -- NetworkId (Mainnet, Testnet),
+  NetworkId (Testnet),
   NetworkMagic (NetworkMagic),
  )
 
 import Cardano.Api.Network (Target (VolatileTip))
+
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Except (runExceptT)
 import Data.Aeson (encode)
 import Data.ByteString.Lazy.Char8 qualified as BL8
 import Data.Text.Lazy qualified as BL
-import Data.Typeable (Typeable, typeOf)
+
 import Data.Word (Word32)
 import System.Environment (lookupEnv)
 import System.Exit (exitFailure)
 import Text.Read (readMaybe)
-import Web.Scotty
+import Web.Scotty (get, html, scotty)
 import Prelude
+
+-- For debug fns
+-- import Data.Typeable (typeOf)
 
 defaultCModeParams :: ConsensusModeParams
 defaultCModeParams = CardanoModeParams (EpochSlots 21600)
@@ -61,12 +67,12 @@ readEnvVarOrExit sEnvVar = do
       exitFailure
 
 -- Debug fns
-printEither :: Show a => Show b => Either a b -> IO ()
-printEither (Left a) = putStrLn ("Left: " ++ show a)
-printEither (Right b) = putStrLn ("Right: " ++ show b)
-
-printTypeOf :: Typeable a => a -> IO ()
-printTypeOf x = putStrLn $ "The type is: " ++ show (typeOf x)
+-- printEither :: Show a => Show b => Either a b -> IO ()
+-- printEither (Left a) = putStrLn ("Left: " ++ show a)
+-- printEither (Right b) = putStrLn ("Right: " ++ show b)
+--
+-- printTypeOf :: Typeable a => a -> IO ()
+-- printTypeOf x = putStrLn $ "The type is: " ++ show (typeOf x)
 
 main :: IO ()
 main = do
@@ -88,4 +94,4 @@ main = do
       html $ case pparams of
         Left err -> BL.pack $ "Query failed with error: " ++ show err
         Right (Left eraMismatch) -> BL.pack $ "Era mismatch: " ++ show eraMismatch
-        Right (Right pparams) -> BL.pack $ BL8.unpack $ encode pparams
+        Right (Right result) -> BL.pack $ BL8.unpack $ encode result

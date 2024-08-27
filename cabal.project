@@ -19,13 +19,6 @@ index-state:
 packages:
     cardano-node-pparams-api
 
-allow-newer:
-  *:aeson,
-  monoidal-containers:aeson,
-  size-based:template-haskell,
-  attoparsec,
-  text
-
 test-show-details: direct
 
 package cardano-node-pparams-api

@@ -22,36 +22,34 @@ common project-config
                         OverloadedStrings
 
   ghc-options:          -Werror
-                        -- -Wall
-                        -- -Wcompat
-                        -- -Wincomplete-record-updates
-                        -- -Wincomplete-uni-patterns
-                        -- -Wpartial-fields
-                        -- -Wredundant-constraints
-                        -- -Wunused-packages
-                        -- -Wno-orphans
-                        -- -Wno-deprecations
+                        -Wall
+                        -Wcompat
+                        -Wincomplete-record-updates
+                        -Wincomplete-uni-patterns
+                        -Wpartial-fields
+                        -Wredundant-constraints
+                        -Wunused-packages
 
 common maybe-unix
   if !os(windows)
-     build-depends:    unix
+     build-depends:     unix
 
 library
   import:               base, project-config
 
   if flag(unexpected_thunks)
-    cpp-options: -DUNEXPECTED_THUNKS
+    cpp-options:        -DUNEXPECTED_THUNKS
 
   hs-source-dirs:       src
 
   exposed-modules:      CardanoNodePparamsApi
 
-  build-depends:      aeson             >= 1.5.6.0
-                      , cardano-api:{cardano-api,internal} ^>= 9.1
-                      , scotty
-                      , bytestring
-                      , text
-                      , transformers
+  build-depends:        aeson             >= 1.5.6.0
+                        , bytestring
+                        , cardano-api:{cardano-api} ^>= 9.1
+                        , scotty
+                        , text
+                        , transformers
 
 executable cardano-node-pparams-api
   import:               base, project-config
