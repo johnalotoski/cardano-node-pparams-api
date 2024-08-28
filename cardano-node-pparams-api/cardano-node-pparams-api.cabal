@@ -46,7 +46,7 @@ library
 
   build-depends:        aeson             >= 1.5.6.0
                         , bytestring
-                        , cardano-api:{cardano-api} ^>= 9.1
+                        , cardano-api:{cardano-api,internal} ^>= 9.1
                         , scotty
                         , text
                         , transformers
