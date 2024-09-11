@@ -87,10 +87,11 @@ validateShelleyEraOrExit era = case era of
   Right (AnyCardanoEra BabbageEra) -> return $ AnyShelleyBasedEra ShelleyBasedEraBabbage
   Right (AnyCardanoEra ConwayEra) -> return $ AnyShelleyBasedEra ShelleyBasedEraConway
 
--- Use Continuation-Passing Style (CPS) approach to avoid Skolem and variable escape errors on unwrap
+-- Use Continuation-Passing Style (CPS) approach to avoid Skolem and variable escape errors on existential unwrap
 withAnyShelleyBasedEra :: AnyShelleyBasedEra -> (forall era. ShelleyBasedEra era -> r) -> r
 withAnyShelleyBasedEra (AnyShelleyBasedEra era) handler = handler era
 
+-- Just a sample sbe processing function to prove we can unwrap the existential and do something with it
 processEra :: ShelleyBasedEra era -> String
 processEra ShelleyBasedEraShelley = "This is the Shelley era."
 processEra ShelleyBasedEraAllegra = "This is the Allegra era."
@@ -115,29 +116,75 @@ main = do
 
   let localNode = localNodeConnInfo sSocketPath wNetworkId
 
-  -- TODO: Execute this occasionally to determine if there is an era change
   era <- runExceptT $ determineEra localNode
-  queryEra <- validateShelleyEraOrExit era
-  print queryEra
 
-  let qX = withAnyShelleyBasedEra queryEra processEra
+  -- This works: ShelleyBasedEraX parameter is hard-coded
+  pparams <-
+    liftIO $
+      runExceptT $
+        queryNodeLocalState localNode VolatileTip $
+          QueryInEra $
+            -- Ideally, we'd like to not use a hard-coded param here, ie:
+            -- QueryInShelleyBasedEra ShelleyBasedEraDynamicallyDetermined QueryProtocolParameters
+            QueryInShelleyBasedEra ShelleyBasedEraConway QueryProtocolParameters
 
-  print qX
-  _ <- exitFailure
+  -- This works, json pparams are printed
+  case pparams of
+    Left err -> print err
+    Right (Left eraMismatch) -> print eraMismatch
+    Right (Right result) -> print $ encode result
 
-  scotty 3000 $
-    get "/api/pparams" $ do
-      -- Obtain protocol parameters
-      pparams <-
-        liftIO $
-          runExceptT $
-            queryNodeLocalState localNode VolatileTip $
-              QueryInEra $
-                -- QueryInShelleyBasedEra qX QueryProtocolParameters
-                QueryInShelleyBasedEra ShelleyBasedEraBabbage QueryProtocolParameters
+  -- Now let's try to query with the era supplied dynamically instead of hard-coded
+  -- Use the CardanoEra to return the ShelleyBasedEraX in an existential AnyShelleyBasedEra wrapper
+  sbeWrapped <- validateShelleyEraOrExit era
+  print sbeWrapped
 
-      -- TODO: use json
-      html $ case pparams of
-        Left err -> BL.pack $ "Query failed with error: " ++ show err
-        Right (Left eraMismatch) -> BL.pack $ "Era mismatch: " ++ show eraMismatch
-        Right (Right result) -> BL.pack $ BL8.unpack $ encode result
+  -- Show we can unwrap the existential and pattern match on the original era
+  let simpleResult = withAnyShelleyBasedEra sbeWrapped processEra
+  print simpleResult
+
+  -- Now we try to use an unwrapped ShelleyBasedEraX in the query...  How?
+  -- This is one example of what we tried, but results in an error of:
+  -- No instance for ‘Show
+  --                      (cardano-ledger-core-1.13.2.0:Cardano.Ledger.Core.PParams.PParamsHKD
+  --                         Data.Functor.Identity.Identity
+  --                         (Cardano.Api.Eon.ShelleyBasedEra.ShelleyLedgerEra era))’
+  print "Begin placeholder"
+  -- let
+  --   handler :: forall era. ShelleyBasedEra era -> IO ()
+  --   handler sbe = do
+  --     result <-
+  --       liftIO $
+  --         runExceptT $
+  --           queryNodeLocalState localNode VolatileTip $
+  --             QueryInEra $
+  --               -- Ideally, we'd like to not use a hard-coded param here, ie:
+  --               -- QueryInShelleyBasedEra sbe QueryProtocolParameters
+  --               QueryInShelleyBasedEra sbe QueryProtocolParameters
+  --     case result of
+  --       Left err -> print err
+  --       Right (Left eraMismatch) -> print eraMismatch
+  --       Right (Right result) -> print result
+
+  -- withAnyShelleyBasedEra sbeWrapped handler
+  print "End placeholder"
+
+-- For later:
+-- Serve the endpoint from a simple webserver;
+-- place behind varnish with a relatively short TTL
+--
+-- scotty 3000 $
+--   get "/api/pparams" $ do
+--     -- Obtain protocol parameters
+--     pparams <-
+--       liftIO $
+--         runExceptT $
+--           queryNodeLocalState localNode VolatileTip $
+--             QueryInEra $
+--               -- QueryInShelleyBasedEra qX QueryProtocolParameters
+--               QueryInShelleyBasedEra ShelleyBasedEraBabbage QueryProtocolParameters
+--
+--     html $ case pparams of
+--       Left err -> BL.pack $ "Query failed with error: " ++ show err
+--       Right (Left eraMismatch) -> BL.pack $ "Era mismatch: " ++ show eraMismatch
+--       Right (Right result) -> BL.pack $ BL8.unpack $ encode result

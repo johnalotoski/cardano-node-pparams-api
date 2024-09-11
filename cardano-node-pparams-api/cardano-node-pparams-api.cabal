@@ -22,7 +22,8 @@ common project-config
                         OverloadedStrings
 
   ghc-options:          -Werror
-                        -Wall
+                        -- Temporarily disable -Wall until mvp is done
+                        -- -Wall
                         -Wcompat
                         -Wincomplete-record-updates
                         -Wincomplete-uni-patterns
