@@ -49,7 +49,7 @@
         inherit (nixpkgs) lib;
 
         # see flake `variants` below for alternative compilers
-        defaultCompiler = "ghc965";
+        defaultCompiler = "ghc966";
 
         # We use cabalProject' to ensure we don't build the plan for
         # all systems.
@@ -76,8 +76,9 @@
             // lib.optionalAttrs (config.compiler-nix-name == defaultCompiler) {
               # Tools that work only with default compiler
               fourmolu = "0.14.0.0";
-              hlint = "3.6.1";
-              haskell-language-server = "2.8.0.0";
+              haskell-language-server.src = nixpkgs.haskell-nix.sources."hls-2.9";
+              hlint = "3.8";
+              stylish-haskell = "0.14.6.0";
             };
           # And from nixpkgs or other inputs.
           shell.nativeBuildInputs = with nixpkgs; [gh jq yq-go];
