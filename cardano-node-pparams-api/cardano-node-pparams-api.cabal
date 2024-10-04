@@ -46,11 +46,15 @@ library
   exposed-modules:      CardanoNodePparamsApi
 
   build-depends:        aeson             >= 1.5.6.0
-                        , bytestring
                         , cardano-api:{cardano-api,internal} ^>= 9.3
-                        , scotty
+                        , cardano-cli
+                        , ouroboros-consensus
+                        , ouroboros-consensus-cardano
+                        , servant-server
                         , text
                         , transformers
+                        , utf8-string
+                        , warp
 
 executable cardano-node-pparams-api
   import:               base, project-config
