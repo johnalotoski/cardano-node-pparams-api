@@ -52,7 +52,6 @@ library
                         , ouroboros-consensus-cardano
                         , servant-server
                         , text
-                        , transformers
                         , utf8-string
                         , warp
 
