@@ -71,6 +71,7 @@
           shell.tools =
             {
               cabal = "3.10.3.0";
+              cabal-gild = "1.5.0.1";
               ghcid = "0.8.9";
             }
             // lib.optionalAttrs (config.compiler-nix-name == defaultCompiler) {
